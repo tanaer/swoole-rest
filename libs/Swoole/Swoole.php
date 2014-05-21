@@ -102,6 +102,8 @@ class Swoole
         $this->load = new Swoole\Loader($this);
         $this->model = new Swoole\ModelLoader($this);
 
+        import_func('swoole');
+
         //路由钩子，URLRewrite
         $this->addHook(Swoole::HOOK_ROUTE, 'swoole_urlrouter_rewrite');
         //mvc
@@ -250,7 +252,7 @@ class Swoole
             }
             $mvc = $hook($uri);
             //命中
-            if($mvc !== false)
+            if(isset($mvc['controller']) !== false)
             {
                 break;
             }
@@ -282,7 +284,8 @@ class Swoole
         }
         catch(\Exception $e)
         {
-            if ($request->finish != 1) $this->http_error(404, $response, $e->getMessage());
+            $HttpServer = new \Swoole\Network\Protocol\HttpServer();
+            if ($request->finish != 1) $HttpServer->http_error(404, $response, $e->getMessage());
         }
         //重定向
         if (isset($response->head['Location']))
@@ -492,6 +495,7 @@ function swoole_urlrouter_rewrite(&$uri)
                     $_GET[$v] = $match[$k+1];
                 }
             }
+            $uri['path'] = $rule['mvc'];
             return $rule['mvc'];
         }
     }
