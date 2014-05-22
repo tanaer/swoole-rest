@@ -325,7 +325,7 @@ class Swoole
 
         //未使用命名空间
         $controller_class_no_namespace = $mvc['controller'];
-        $controller_path = self::$app_path."/controllers/{$mvc['controller']}.php";
+        $controller_path = self::$app_path."/controllers/" . $mvc['path'] . ucwords($mvc['controller']) . ".php";
         if (class_exists($controller_class_no_namespace, false))
         {
             $controller_class = $controller_class_no_namespace;
@@ -342,8 +342,7 @@ class Swoole
         }
 
         //使用命名空间，文件名必须大写
-        $controller_class_use_namespace = '\\App\\Controller\\'.ucwords($mvc['controller']);
-        $controller_path = self::$app_path."/controllers/".ucwords($mvc['controller']).".php";
+        $controller_class_use_namespace = '\\App\\Controller\\'. $mvc['path'] .ucwords($mvc['controller']);
         if (class_exists($controller_class_use_namespace, false))
         {
             $controller_class = $controller_class_use_namespace;
@@ -370,6 +369,7 @@ class Swoole
         {
             $this->reloadController($mvc, $controller_path);
         }
+
         $controller = new $controller_class($this);
         if (!is_callable(array($controller, $mvc['view'])))
         {
@@ -504,7 +504,7 @@ function swoole_urlrouter_rewrite(&$uri)
 
 function swoole_urlrouter_mvc(&$uri)
 {
-    $array = array('controller'=>'page', 'view'=>'index');
+    $array = array('controller'=>'page', 'view'=>'index', 'path' => '');
     if(!empty($_GET["c"])) $array['controller'] = $_GET["c"];
     if(!empty($_GET["v"])) $array['view'] = $_GET["v"];
 
@@ -513,16 +513,28 @@ function swoole_urlrouter_mvc(&$uri)
         return $array;
     }
     $request = explode('/', trim($uri['path'], '/'), 3);
-    if(count($request) < 2)
+    //默认获取C\A的PATH层级
+    $layerNo = 2;
+    //排除目录
+    $basePath = Swoole::$app_path . '/controllers/';
+    foreach ($request AS $layerVal){
+        if (is_dir($basePath . $array['path'] . $layerVal)){
+            $array['path'] .= $layerVal.DIRECTORY_SEPARATOR;
+            ++$layerNo;
+        }
+    }
+    if(count($request) < $layerNo - 1)
     {
         return $array;
     }
-    $array['controller']=$request[0];
-    $array['view']=$request[1];
-    if(isset($request[2]))
+    $controllerLayerNo = $layerNo - 2;
+    $actionLayerNo = $layerNo - 1;
+    $array['controller']=$request[$controllerLayerNo];
+    $array['view']=$request[$actionLayerNo] ? $request[$actionLayerNo] : 'index';
+    if(isset($request[$actionLayerNo]))
     {
-        $request[2] = trim($request[2], '/');
-        $_id = str_replace('.html', '', $request[2]);
+        $request[$actionLayerNo] = trim($request[$actionLayerNo], '/');
+        $_id = str_replace('.html', '', $request[$actionLayerNo]);
         if(is_numeric($_id))
         {
             $_GET['id'] = $_id;
@@ -532,8 +544,8 @@ function swoole_urlrouter_mvc(&$uri)
             Swoole\Tool::$url_key_join = '-';
             Swoole\Tool::$url_param_join = '-';
             Swoole\Tool::$url_add_end = '.html';
-            Swoole\Tool::$url_prefix = WEBROOT."/{$request[0]}/$request[1]/";
-            Swoole\Tool::url_parse_into($request[2], $_GET);
+            Swoole\Tool::$url_prefix = WEBROOT."/{$request[$controllerLayerNo]}/$request[$actionLayerNo]/";
+            Swoole\Tool::url_parse_into($request[$actionLayerNo], $_GET);
         }
     }
     return $array;
