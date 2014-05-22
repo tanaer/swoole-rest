@@ -1,8 +1,8 @@
 <?php
 $tpl = new Swoole\Template();
 global $php;
-$tpl->assign_by_ref('php_genv',$php->genv);
-$tpl->assign_by_ref('php',$php->env);
+$tpl->assignByRef('php_genv',$php->genv);
+$tpl->assignByRef('php',$php->env);
 
 if(defined('TPL_DIR'))
 {
@@ -16,6 +16,6 @@ else
 {
 	$tpl->template_dir = WEBPATH."/templates";
 }
-define('TPL_BASE', $tpl->template_dir);
+define('TPL_BASE', $tpl->template_dir[0]);
 if(DEBUG=='on') $tpl->compile_check = true;
 else $tpl->compile_check = false;

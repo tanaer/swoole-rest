@@ -1,7 +1,7 @@
 <?php
 namespace Swoole;
 require(LIBPATH."/module/smarty3/Smarty.class.php");
-require(LIBPATH."/module/smarty3/SmartyBC.class.php");
+//require(LIBPATH."/module/smarty3/SmartyBC.class.php");
 /**
  * Smarty模板系统封装类
  * 提供模板引擎类，可以访问到MVC结构，增加了pagecache静态页面缓存的功能
@@ -17,15 +17,19 @@ class Template extends \Smarty
 
 	function __construct()
 	{
+        parent::__construct();
 		$this->compile_dir = WEBPATH."/cache/templates_c";
 		$this->config_dir = WEBPATH."/configs";
 		$this->cache_dir = WEBPATH."/cache/pagecache";
 		$this->left_delimiter = "{{";
 		$this->right_delimiter = "}}";
 	}
+    function __call(){
+
+    }
 	function __init()
 	{
-	    $this->clear_all_assign();
+	    $this->clearAllAssign();
 	}
 	function set_template_dir($dir)
 	{
