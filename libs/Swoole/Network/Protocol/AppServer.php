@@ -38,6 +38,7 @@ class AppServer extends HttpServer
 
     function onRequest(Swoole\Request $request)
     {
+        $this->currentResponse = new Swoole\Response();
         return Swoole::getInstance()->handlerServer($request);
     }
 }
